@@ -88,6 +88,10 @@ browserInterop = new (function () {
         jsRef[jsRefKey] = id;
         return jsRef;
     }
+    this.getObjectFromRef = function(ref) {
+        var id = ref[jsRefKey];
+        return jsObjectRefs[id];
+    }
     this.removeObjectRef = function (id) {
         delete jsObjectRefs[id];
     }
@@ -273,3 +277,7 @@ browserInterop = new (function () {
         }
     })();
 })();
+
+window.newRTCPeerConnection = function(conf) {
+    return new RTCPeerConnection(conf);
+}

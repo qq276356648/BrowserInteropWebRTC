@@ -139,6 +139,13 @@ namespace BrowserInterop.Extensions
             return jsRuntimeObjectRef;
         }
 
+        public static async ValueTask<T> GetObjectFromRef<T>(this IJSRuntime jsRuntime, JsRuntimeObjectRef jsObjectRef)
+        {
+            var obj = await jsRuntime.InvokeAsync<T>("browserInterop.getObjectFromRef", jsObjectRef)
+                .ConfigureAwait(false);
+            return obj;
+        }
+
 
         /// <summary>
         /// Call the method on the js instance
@@ -228,6 +235,30 @@ namespace BrowserInterop.Extensions
                 new object[] {windowObject, methodName}.Concat(arguments).ToArray()).ConfigureAwait(false);
             jsRuntimeObjectRef.JsRuntime = jsRuntime;
             return jsRuntimeObjectRef;
+        }
+
+        /// <summary>
+        /// Call the method on the js instance and return the wrapper of the js object
+        /// </summary>
+        /// <param name="jsRuntime">Current JS Runtime</param>
+        /// <param name="windowObject">Reference to the JS instance</param>
+        /// <param name="methodName">Method name/path </param>
+        /// <param name="arguments">method arguments</param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static async ValueTask<T> InvokeInstanceMethodWrapper<T>(this IJSRuntime jsRuntime,
+            JsRuntimeObjectRef windowObject, string methodName, params object[] arguments)
+        where T : JsObjectWrapperBase
+        {
+            var jsRef = await jsRuntime.InvokeInstanceMethodGetRef(windowObject, methodName, arguments)
+                .ConfigureAwait(false);
+            var content = await jsRuntime.GetObjectFromRef<T>(jsRef).ConfigureAwait(false);
+            if (content == null)
+            {
+                return null;
+            }
+            content.SetJsRuntime(jsRuntime, jsRef);
+            return content;
         }
 
         public static async ValueTask<bool> HasProperty(this IJSRuntime jsRuntime, JsRuntimeObjectRef jsObject,
